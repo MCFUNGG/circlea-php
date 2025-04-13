@@ -1,6 +1,6 @@
 # CircleA PHP API
 
-CircleA应用程序的PHP API后端，用于连接Android客户端和Azure MySQL数据库。
+这是CircleA应用的PHP API后端代码，用于连接Android应用和MySQL数据库。
 
 ## 项目结构
 
@@ -16,11 +16,21 @@ php/
 
 ## 主要功能
 
-- 用户认证和授权
-- 教师申请管理
-- 学生预约管理
-- 支付处理
-- 评分系统
+- 用户注册和登录
+- 家教信息管理
+- 学生信息管理
+- 匹配系统
+- 评分和评价
+
+## 技术栈
+
+- PHP 7.4+
+- MySQL 8.0
+- 已迁移到Azure App Service和Azure MySQL数据库
+
+## 配置说明
+
+所有数据库连接已经更新为使用`db_config.php`文件进行集中管理。
 
 ## 部署要求
 
