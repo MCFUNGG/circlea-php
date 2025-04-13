@@ -5,19 +5,16 @@
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-// Database connection parameters
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "system001";
+header("Content-Type: application/json");
 
-$conn = new mysqli($servername, $username, $password, $dbname);
-$conn->set_charset("utf8mb4");
-if ($conn->connect_error) {
-    die(json_encode(array(
-        'status' => 'error',
-        'message' => "Connection failed: " . $conn->connect_error
-    )));
+// 引入数据库配置文件
+require_once 'db_config.php';
+
+// 使用配置的连接函数获取数据库连接
+$connect = getDbConnection();
+if (!$connect) {
+    echo json_encode(["success" => false, "message" => "Database connection failed"]);
+    exit;
 }
 
 $conn->begin_transaction();
@@ -48,9 +45,9 @@ try {
                     language = VALUES(language),
                     other = VALUES(other),
                     cv_path = VALUES(cv_path)";
-        $stmtCV = $conn->prepare($sqlCV);
+        $stmtCV = $connect->prepare($sqlCV);
         if ($stmtCV === false) {
-            throw new Exception("Preparing CV SQL statement failed: " . $conn->error);
+            throw new Exception("Preparing CV SQL statement failed: " . $connect->error);
         }
         $stmtCV->bind_param("issssss", $mId, $contact, $skills, $education, $language, $other, $cvPath);
         if (!$stmtCV->execute()) {
@@ -92,9 +89,9 @@ try {
     
                 $sqlCertInsert = "INSERT INTO member_cert (member_id, cert_file, description, created_time, status) 
                                   VALUES (?, ?, ?, CURRENT_TIMESTAMP, 'P')";
-                $stmtCertInsert = $conn->prepare($sqlCertInsert);
+                $stmtCertInsert = $connect->prepare($sqlCertInsert);
                 if (!$stmtCertInsert) {
-                    throw new Exception("Preparing certificate INSERT statement failed: " . $conn->error);
+                    throw new Exception("Preparing certificate INSERT statement failed: " . $connect->error);
                 }
                 $stmtCertInsert->bind_param("iss", $mId, $newFileName, $description);
                 if (!$stmtCertInsert->execute()) {
@@ -125,5 +122,7 @@ try {
         'message' => $e->getMessage()
     ));
 }
-$conn->close();
+
+// 关闭数据库连接
+mysqli_close($connect);
 ?>
