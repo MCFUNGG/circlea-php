@@ -1,12 +1,10 @@
 <?php
 header("Content-Type: application/json"); // Set response type
 
-// Database connection information
-$host = "127.0.0.1";
-$username = "root";
-$password = ""; // Default password
-$dbname = "system001";
+require_once 'db_config.php';
 
+// 创建数据库连接
+$connect = getDbConnection();
 // Get POST data
 $memberId = trim($_POST["member_id"]); 
 $addressDistrictId = trim($_POST["address_district_id"]); 
@@ -25,7 +23,7 @@ if ($gender_input == 'Male') {
 }
 
 // Connect to the database
-$connect = mysqli_connect($host, $username, $password, $dbname)
+
 or die(json_encode(["success" => false, "message" => "Unable to connect to the database"]));
 
 // Check if the member has an existing version

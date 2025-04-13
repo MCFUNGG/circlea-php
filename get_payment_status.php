@@ -1,10 +1,7 @@
 <?php
 header("Content-Type: application/json");
 
-$host = "127.0.0.1";
-$username = "root";
-$password = "";
-$dbname = "system001";
+
 
 // 定義支付狀態常量
 class PaymentStatus {
@@ -14,8 +11,10 @@ class PaymentStatus {
     const REJECTED = 'rejected';
 }
 
-// 建立資料庫連接
-$connect = mysqli_connect($host, $username, $password, $dbname);
+require_once 'db_config.php';
+
+// 创建数据库连接
+$connect = getDbConnection();
 
 if (!$connect) {
     echo json_encode([

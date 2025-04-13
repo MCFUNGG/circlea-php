@@ -5,19 +5,20 @@
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-header("Content-Type: application/json");
-
-// 引入数据库配置文件
+// Database connection parameters
 require_once 'db_config.php';
 
-// 使用配置的连接函数获取数据库连接
+// 创建数据库连接
 $connect = getDbConnection();
-if (!$connect) {
-    echo json_encode(["success" => false, "message" => "Database connection failed"]);
-    exit;
+$connect->set_charset("utf8mb4");
+if ($connect->connect_error) {
+    die(json_encode(array(
+        'status' => 'error',
+        'message' => "Connection failed: " . $connect->connect_error
+    )));
 }
 
-$conn->begin_transaction();
+$connect->begin_transaction();
 try {
     error_log("【Debug】Received POST: " . print_r($_POST, true));
     error_log("【Debug】Received FILES: " . print_r($_FILES, true));
@@ -103,7 +104,7 @@ try {
                 throw new Exception("Certificate file upload error at index: " . ($i + 1));
             }
         }
-        $conn->commit();
+        $connect->commit();
         echo json_encode(array(
             'status'     => 'success',
             'message'    => 'Data uploaded successfully',
@@ -115,14 +116,12 @@ try {
         throw new Exception("Missing required parameters or file upload");
     }
 } catch (Exception $e) {
-    $conn->rollback();
+    $connect->rollback();
     error_log("【Debug】Upload error: " . $e->getMessage());
     echo json_encode(array(
         'status'  => 'error',
         'message' => $e->getMessage()
     ));
 }
-
-// 关闭数据库连接
-mysqli_close($connect);
+$connect->close();
 ?>

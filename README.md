@@ -1,105 +1,58 @@
 # CircleA PHP API
 
-这是CircleA应用的PHP API后端代码，用于连接Android应用和MySQL数据库。
+此目录包含CircleA应用程序的PHP API文件，已针对Azure MySQL数据库进行了配置。
 
-## 项目结构
+## 文件结构
+
+- `db_config.php`: 数据库连接配置文件
+- `*.php`: 各种API端点文件
+- `update_db_connections.php`: 批量更新数据库连接的工具脚本（可选使用）
+
+## 部署说明
+
+### 1. 准备文件
+
+所有PHP文件都已配置为使用Azure MySQL数据库。如果您需要更改连接信息，请修改`db_config.php`文件。
+
+### 2. 部署到Azure App Service
+
+将整个文件夹上传到Azure App Service的wwwroot目录中。有几种方式可以实现：
+
+#### 使用FTP
+1. 在Azure门户中，找到您的App Service
+2. 在"部署中心"或"FTPS凭据"中获取FTP连接信息
+3. 使用FileZilla等FTP客户端连接并上传文件
+
+#### 使用ZIP部署
+1. 将整个PHP目录压缩为ZIP文件
+2. 在Azure门户中，选择您的App Service
+3. 使用"部署中心"中的"手动部署"选项上传ZIP文件
+
+### 3. 测试连接
+
+部署完成后，访问以下URL测试数据库连接：
 
 ```
-php/
-├── api/              # API端点文件
-│   ├── auth/        # 认证相关
-│   ├── tutor/       # 教师相关
-│   └── student/     # 学生相关
-├── config/          # 配置文件
-└── utils/           # 工具函数
+https://your-app-name.azurewebsites.net/php/get_json.php
 ```
 
-## 主要功能
+## 故障排除
 
-- 用户注册和登录
-- 家教信息管理
-- 学生信息管理
-- 匹配系统
-- 评分和评价
+如果遇到连接问题：
 
-## 技术栈
+1. 检查`db_config.php`中的连接信息是否正确
+2. 确认Azure App Service中已启用PHP的mysqli扩展
+3. 检查Azure MySQL服务器防火墙规则是否允许Azure服务连接
+4. 查看错误日志（`php_error.log`）了解详细错误信息
 
-- PHP 7.4+
-- MySQL 8.0
-- 已迁移到Azure App Service和Azure MySQL数据库
+## Android应用程序配置
 
-## 配置说明
+更新Android应用程序中的API基础URL：
 
-所有数据库连接已经更新为使用`db_config.php`文件进行集中管理。
+```java
+// 旧URL（本地XAMPP）
+String BASE_URL = "http://192.168.X.X/php/";
 
-## 部署要求
-
-- PHP 7.4+
-- MySQL 8.0+
-- SSL支持
-
-## 部署步骤
-
-1. 配置数据库连接
-   - 复制 `db_config.php` 到服务器
-   - 更新数据库连接信息
-
-2. 配置Azure App Service
-   - 启用PHP扩展：
-     - mysqli
-     - openssl
-     - json
-
-3. 上传文件
-   - 使用FTP或Git部署到Azure App Service
-   - 确保文件权限正确
-
-4. 验证部署
-   - 访问 `test_connection.php` 检查数据库连接
-   - 测试关键API端点
-
-## 安全注意事项
-
-- 所有API端点都需要有效的认证
-- 数据库连接使用SSL
-- 密码使用bcrypt加密
-- 使用参数化查询防止SQL注入
-
-## API文档
-
-### 认证API
-
-#### 登录
-- 端点：`login.php`
-- 方法：POST
-- 参数：
-  - email
-  - password
-
-#### 创建账户
-- 端点：`create_account.php`
-- 方法：POST
-- 参数：
-  - username
-  - email
-  - phone
-  - password
-
-### 教师API
-
-#### 提交申请
-- 端点：`post_application.php`
-- 方法：POST
-- 参数：
-  - member_id
-  - app_creator
-  - class_level_id
-  - description
-  - fee_per_hr
-  - subject_ids
-  - district_ids
-  - selected_dates
-
-## 联系方式
-
-如有问题，请联系项目维护者。 
+// 新URL（Azure App Service）
+String BASE_URL = "https://circlea-app.azurewebsites.net/php/";
+``` 

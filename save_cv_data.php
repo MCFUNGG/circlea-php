@@ -1,84 +1,93 @@
 <?php
 header('Content-Type: application/json');
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "system001";
+// 引入数据库配置文件
+require_once 'db_config.php';
 
-// Create connection
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-// Check connection
-if ($conn->connect_error) {
-    die(json_encode([
-        'success' => false,
-        'message' => "Connection failed: " . $conn->connect_error
-    ]));
+// 创建数据库连接
+$connect = getDbConnection();
+if ($connect->connect_error) {
+    die(json_encode(array(
+        'status' => 'error',
+        'message' => "Connection failed: " . $connect->connect_error
+    )));
 }
 
-// Get POST data
-$member_id = $_POST['member_id'] ?? '';
-$contact = $_POST['contact'] ?? '';
-$skills = $_POST['skills'] ?? '';
-$education = $_POST['education'] ?? '';
-$language = $_POST['language'] ?? '';
-$other = $_POST['other'] ?? '';
-$image_data = $_POST['image'] ?? '';
-
-if (empty($member_id)) {
-    die(json_encode([
-        'success' => false,
-        'message' => 'Member ID is required'
-    ]));
-}
-
-// Create directory if it doesn't exist
-$upload_dir = $_SERVER['DOCUMENT_ROOT'] . '/ScanCV/uploads/';
-if (!file_exists($upload_dir)) {
-    mkdir($upload_dir, 0777, true);
-}
-
-// Generate unique filename
-$image_filename = 'CV_' . $member_id . '_' . time() . '.jpg';
-$image_path = 'uploads/' . $image_filename;
-$full_path = $upload_dir . $image_filename;
-
-// Decode and save image
-$image_data = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $image_data));
-if (file_put_contents($full_path, $image_data)) {
-    // Prepare SQL statement
-    $sql = "INSERT INTO cv_data (member_id, contact, skills, education, language, other, cv_path) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE 
-            contact = VALUES(contact),
-            skills = VALUES(skills),
-            education = VALUES(education),
-            language = VALUES(language),
-            other = VALUES(other),
-            cv_path = VALUES(cv_path)";
-
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sssssss", $member_id, $contact, $skills, $education, $language, $other, $image_path);
-
-    if ($stmt->execute()) {
-        echo json_encode([
-            'success' => true,
-            'message' => 'CV data and image saved successfully'
-        ]);
-    } else {
-        echo json_encode([
-            'success' => false,
-            'message' => 'Error saving CV data: ' . $stmt->error
-        ]);
+// Check if request was made via POST
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Get POST data
+    $memberId = isset($_POST['member_id']) ? $_POST['member_id'] : null;
+    $cvData = isset($_POST['cv_data']) ? $_POST['cv_data'] : null;
+    
+    if (!$memberId || !$cvData) {
+        die(json_encode(array(
+            'status' => 'error',
+            'message' => 'Missing required fields: member_id or cv_data'
+        )));
     }
-    $stmt->close();
+    
+    try {
+        // Process CV data
+        $cvDataObject = json_decode($cvData, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new Exception("Invalid JSON in cv_data: " . json_last_error_msg());
+        }
+        
+        // Extract data
+        $name = $cvDataObject['name'] ?? '';
+        $phone = $cvDataObject['phone'] ?? '';
+        $email = $cvDataObject['email'] ?? '';
+        $education = $cvDataObject['education'] ?? '';
+        $experience = $cvDataObject['experience'] ?? '';
+        $skills = $cvDataObject['skills'] ?? '';
+        $version = isset($cvDataObject['version']) ? (int)$cvDataObject['version'] : 1;
+        
+        // Prepare SQL query
+        $sql = "INSERT INTO tutor_cv (member_id, name, phone, email, education, experience, skills, version) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        
+        $stmt = $connect->prepare($sql);
+        if (!$stmt) {
+            throw new Exception("Prepare statement failed: " . $connect->error);
+        }
+        
+        $stmt->bind_param("issssssi", 
+            $memberId, 
+            $name, 
+            $phone,
+            $email,
+            $education,
+            $experience,
+            $skills,
+            $version
+        );
+        
+        // Execute query
+        if ($stmt->execute()) {
+            echo json_encode(array(
+                'status' => 'success',
+                'message' => 'CV data saved successfully',
+                'cv_id' => $stmt->insert_id
+            ));
+        } else {
+            throw new Exception("Execute statement failed: " . $stmt->error);
+        }
+        
+        $stmt->close();
+    } catch (Exception $e) {
+        echo json_encode(array(
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ));
+    }
 } else {
-    echo json_encode([
-        'success' => false,
-        'message' => 'Error saving image file'
-    ]);
+    echo json_encode(array(
+        'status' => 'error',
+        'message' => 'Invalid request method. Only POST is supported.'
+    ));
 }
 
-$conn->close();
+$connect->close();
 ?>

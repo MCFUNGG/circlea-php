@@ -5,14 +5,10 @@ ini_set('display_errors', 1);
 ini_set('log_errors', 1);
 ini_set('error_log', 'php_error.log');
 
-$host = "127.0.0.1";
-$username = "root";
-$password = "";
-$dbname = "system001";
+require_once 'db_config.php';
 
-// Database connection
-$connect = mysqli_connect($host, $username, $password, $dbname);
-
+// 创建数据库连接
+$connect = getDbConnection();
 if (!$connect) {
     echo json_encode([
         "success" => false, 

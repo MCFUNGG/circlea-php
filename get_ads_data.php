@@ -1,13 +1,13 @@
 <?php
 header("Content-Type: application/json");
 
-// 引入数据库配置文件
 require_once 'db_config.php';
 
-// 使用配置的连接函数获取数据库连接
+// 创建数据库连接
 $connect = getDbConnection();
-if (!$connect) {
-    echo json_encode(["success" => false, "message" => "Database connection failed"]);
+
+if ($connect->connect_error) {
+    echo json_encode(["success" => false, "message" => "Database connection failed: " . $connect->connect_error]);
     exit;
 }
 
@@ -49,5 +49,5 @@ try {
 }
 
 // Close database connection
-mysqli_close($connect);
+$connect->close();
 ?>

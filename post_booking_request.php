@@ -8,12 +8,10 @@ header("Content-Type: application/json");
 
 try {
     // Database connection
-    $host = "127.0.0.1";
-    $username = "root";
-    $password = "";
-    $dbname = "system001";
+    require_once 'db_config.php';
 
-    $connect = mysqli_connect($host, $username, $password, $dbname);
+    // 创建数据库连接
+    $connect = getDbConnection();
     if (!$connect) {
         throw new Exception("Database connection failed: " . mysqli_connect_error());
     }
