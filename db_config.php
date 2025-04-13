@@ -2,7 +2,7 @@
 // Azure MySQL数据库连接配置
 $host = "circlea-mysql-server.mysql.database.azure.com";
 $username = "dfwuwerfsf@circlea-mysql-server";
-$password = "b2WH3vN$5$LTAWXP";
+$password = "circleA01";
 $dbname = "circlea-db";
 
 // SSL配置 - Azure MySQL要求SSL连接
