@@ -1,16 +1,13 @@
 <?php
 header("Content-Type: application/json");
 
-$host = "127.0.0.1";
-$username = "root";
-$password = "";
-$dbname = "system001";
+// 引入数据库配置文件
+require_once 'db_config.php';
 
-// Establish database connection
-$connect = new mysqli($host, $username, $password, $dbname);
-
-if ($connect->connect_error) {
-    echo json_encode(["success" => false, "message" => "Database connection failed: " . $connect->connect_error]);
+// 使用配置的连接函数获取数据库连接
+$connect = getDbConnection();
+if (!$connect) {
+    echo json_encode(["success" => false, "message" => "Database connection failed"]);
     exit;
 }
 
@@ -52,5 +49,5 @@ try {
 }
 
 // Close database connection
-$connect->close();
+mysqli_close($connect);
 ?>
