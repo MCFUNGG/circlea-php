@@ -1,0 +1,21 @@
+# 日志文件
+php_error.log
+
+# 临时文件
+*.bak
+*.tmp
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 批量更新脚本（不需要上传到生产环境）
+batch_update.php
+update_db_connections.php
+
+# Python脚本和相关文件（如果需要单独管理）
+*.py
+*.json
+
+# 本地配置文件（如果有）
+config.local.php 
