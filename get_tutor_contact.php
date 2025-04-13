@@ -1,81 +1,52 @@
 <?php
 header("Content-Type: application/json");
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-ini_set('log_errors', 1);
-ini_set('error_log', 'php_error.log');
 
-$host = "127.0.0.1";
-$username = "root";
-$password = "";
-$dbname = "system001";
+// 引入数据库配置文件
+require_once 'db_config.php';
 
-// Database connection
-$connect = mysqli_connect($host, $username, $password, $dbname);
-
+// 使用配置的连接函数获取数据库连接
+$connect = getDbConnection();
 if (!$connect) {
+    echo json_encode(["success" => false, "message" => "Database connection failed"]);
+    exit;
+}
+
+// 验证match_id参数
+$match_id = isset($_POST['match_id']) ? $_POST['match_id'] : null;
+$member_id = isset($_POST['member_id']) ? $_POST['member_id'] : null;
+
+if (!$match_id || !$member_id) {
     echo json_encode([
-        "success" => false, 
-        "message" => "Database connection failed: " . mysqli_connect_error()
+        'success' => false,
+        'message' => 'Missing required parameters'
     ]);
     exit;
 }
 
-// Get tutor_id from POST
-$tutorId = isset($_POST['tutor_id']) ? $_POST['tutor_id'] : null;
+// 查询数据库获取tutor联系信息
+$query = "SELECT m.username, m.phone, m.email
+          FROM match_case mc
+          JOIN member m ON mc.tutor_id = m.member_id
+          WHERE mc.match_id = ? AND mc.ps_id = ? AND mc.status = 'A'";
 
-if ($tutorId === null) {
+$stmt = mysqli_prepare($connect, $query);
+mysqli_stmt_bind_param($stmt, "ss", $match_id, $member_id);
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
+
+if (mysqli_num_rows($result) > 0) {
+    $contact_info = mysqli_fetch_assoc($result);
     echo json_encode([
-        "success" => false, 
-        "message" => "Tutor ID not provided"
-    ]);
-    exit;
-}
-
-// Query to get tutor information
-$query = "SELECT m.username as name, m.phone, m.email 
-          FROM member m 
-          WHERE m.member_id = ?";
-
-$stmt = $connect->prepare($query);
-if (!$stmt) {
-    echo json_encode([
-        "success" => false, 
-        "message" => "Query preparation failed: " . mysqli_error($connect)
-    ]);
-    exit;
-}
-
-$stmt->bind_param("s", $tutorId);
-$stmt->execute();
-$result = $stmt->get_result();
-
-if (!$result) {
-    echo json_encode([
-        "success" => false, 
-        "message" => "Query failed: " . mysqli_error($connect)
-    ]);
-    exit;
-}
-
-if ($result->num_rows > 0) {
-    $row = $result->fetch_assoc();
-    echo json_encode([
-        "success" => true,
-        "tutor" => [
-            "name" => $row['name'],
-            "phone" => $row['phone'],
-            "email" => $row['email']
-        ]
+        'success' => true,
+        'data' => $contact_info
     ]);
 } else {
     echo json_encode([
-        "success" => false, 
-        "message" => "No tutor found with this ID"
+        'success' => false,
+        'message' => 'No contact information found or not authorized to view'
     ]);
 }
 
-// Close connections
-$stmt->close();
+mysqli_stmt_close($stmt);
 mysqli_close($connect);
 ?>
