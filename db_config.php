@@ -21,7 +21,7 @@ function getDbConnection() {
     mysqli_ssl_set($connect, NULL, NULL, NULL, NULL, NULL);
     
     // 连接到服务器
-    mysqli_real_connect($connect, $host, $username, $password, $dbname, 3306, MYSQLI_CLIENT_SSL);
+    mysqli_real_connect($connect, $host, $username, $password, $dbname, 3306, NULL, MYSQLI_CLIENT_SSL);
     
     // 检查连接
     if (mysqli_connect_errno()) {
